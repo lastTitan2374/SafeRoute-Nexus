@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeRoute Nexus</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='Sf1.png') }}">
+    <style>
+        /* Your existing CSS styles */
+        .map-controls {
+            display: flex;
+            position: absolute;
+            background-color: #fff;
+            box-shadow: 0 0 1px 0 rgba(24, 94, 224, 0.15), 0 6px 12px 0 rgba(24, 94, 224, 0.15);
+            padding: 0.75rem;
+            border-radius: 99px;
+        }
+        .map-controls * {
+            z-index: 2;
+        }
+        .map-container input[type="radio"] {
+            display: none;
+        }
+        .tab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 30px;
+            width: 50px;
+            font-size: .8rem;
+            color: black;
+            font-weight: 500;
+            border-radius: 99px;
+            cursor: pointer;
+            transition: color 0.15s ease-in;
+        }
+        .map-container input[type="radio"]:checked + label {
+            color: #185ee0;
+        }
+        .map-container input[id="toggle-traffic"]:checked ~ .glider {
+            transform: translateX(0);
+        }
+        .map-container input[id="toggle-satellite"]:checked ~ .glider {
+            transform: translateX(100%);
+        }
+        .map-container input[id="toggle-terrain"]:checked ~ .glider {
+            transform: translateX(200%);
+        }
+        .glider {
+            position: absolute;
+            display: flex;
+            height: 30px;
+            width: 53px;
+            background-color: #e6eef9;
+            z-index: 1;
+            border-radius: 99px;
+            transition: 0.25s ease-out;
+        }
+        @media (max-width: 700px) {
+            .map-controls {
+                transform: scale(0.6);
+            }
+        }
+        .search-panel__body {
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+    max-height: 500px; /* Adjust based on your form's height */
+}
+
+.search-panel__body.collapsed {
+    max-height: 0;
+}
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form action="#" class="search-panel" autocomplete="off">
+            <header style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);">
+                <img src="{{ url_for('static', filename='S2.png') }}" alt="logo" width="280px;" height="auto" style="padding-left: 5px;" id="reloadBtn">
+                <button type="button" id="toggle-form" class="dropdown-arrow" style="background: none; border: none; cursor: pointer;">
+                    
+                </button>
+            </header>
+        
+            <div class="search-panel__body">
+                <div class="search-panel__error"></div>
+        
+                <div class="search-box">
+                    <span class="search-box__stopover-icon"></span>
+                    <input type="search" id="origin-input" placeholder="Starting point">
+                    <button hidden type="button" class="search-box__delete-icon">
+                        <svg viewBox="0 0 20 20">
+                            <use href="images/sprite.svg#delete"></use>
+                        </svg>
+                    </button>
+                </div>
+        
+                <div class="search-box">
+                    <span class="search-box__stopover-icon"></span>
+                    <input type="search" id="destination-input" placeholder="Ending Point">
+                    <button hidden type="button" class="search-box__delete-icon">
+                        <svg viewBox="0 0 20 20">
+                            <use href="images/sprite.svg#delete"></use>
+                        </svg>
+                    </button>
+                </div>
+        
+                <div class="search-panel__actions">
+                    <button type="submit" id="get-directions" class="primary" style="font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;">Get directions</button>
+                </div>
+            </div>
+        </form>
+        
+        <script>
+
+document.getElementById("reloadBtn").addEventListener("click", function() {
+            location.reload();
+        });
+
+
+            document.getElementById("get-directions").addEventListener("click", function(event) {
+                event.preventDefault(); // Prevent form submission
+                document.querySelector(".search-panel__body").style.display = "none";
+                document.getElementById("toggle-form").style.display = "block";
+            });
+        
+            document.getElementById("toggle-form").addEventListener("click", function() {
+                let formBody = document.querySelector(".search-panel__body");
+                if (formBody.style.display === "none") {
+                    formBody.style.display = "block";
+                    this.innerHTML = ""; // Down arrow
+                } else {
+                    formBody.style.display = "none";
+                    this.innerHTML = ""; // Up arrow
+                }
+            });
+        </script>
+        
+
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="map-controls">
+                <input type="radio" id="toggle-traffic" name="tabs">
+                <label class="tab" for="toggle-traffic">Traffic</label>
+                <input type="radio" id="toggle-satellite" name="tabs">
+                <label class="tab" for="toggle-satellite">Satellite</label>
+                <input type="radio" id="toggle-terrain" name="tabs">
+                <label class="tab" for="toggle-terrain">Terrain</label>
+                <span class="glider"></span>
+            </div>
+        </div>
+
+        <div id="routes-panel" class="routes-panel hidden">
+            <h3 style="font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">Available Routes</h3>
+            <div id="routes-list" class="card">
+                <!-- Route cards will be dynamically inserted here -->
+                <!-- Example route card structure -->
+                <div class="route-card">
+                    
+                    
+                </div>
+                <div class="route-conditions">
+                    <!-- Weather and incidents will be displayed here -->
+                </div>
+            </div>
+            <button id="simulate-button" class="simulate-button">Simulate Route</button>
+            <button id="stop-button" class="stop-button">Stop Simulation</button>
+        </div>
+      <div id="directions-panel" class="directions-panel"></div>
+    </div>
+ <!-- Load Google Maps JavaScript API -->
+ <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Load Google Maps JavaScript API -->
+
+        <script>
+        // Load Google Maps API
+        function initializeApp() {
+            initMap();
+        }
+    </script>
+    <script 
+        src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places,visualization&callback=initializeApp" async defer>
+    </script>
+</body>
+</html>
